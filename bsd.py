@@ -58,6 +58,18 @@ def calculate_deflection(x, E, I, mb, m_virtual):
 
     return deflection
 
+# Function to compute rotation along the beam
+def calculate_rotation(x, E, I, mb, m_virtual):
+    # Initialize rotation array
+    rotation = np.zeros_like(x)
+    
+    # Perform the integration for each point
+    for i in range(1, len(x)):
+        # Integrating from the start to the current position x[i]
+        rotation[i] = np.trapz(mb[:i+1] * m_virtual[:i+1] / (E * I), x[:i+1])
+
+    return rotation
+
 # Streamlit Interface
 st.title('Shear, Bending Moment, Deflection, and Rotation for a Simply Supported Beam')
 
@@ -92,6 +104,13 @@ m_virtual = calculate_virtual_bending_moment(x, X, L)
 # Compute Deflection along the Beam
 deflection = calculate_deflection(x, E, I, mb, m_virtual)
 
+# Compute Rotation along the Beam
+rotation = calculate_rotation(x, E, I, mb, m_virtual)
+
+# Deflection and Rotation at X
+deflection_at_X = deflection[int(X / dx)]
+rotation_at_X = rotation[int(X / dx)]
+
 # Plotting Moment Diagram, Shear Force Diagram, and Deflection Diagram
 fig, ax = plt.subplots(4, 1, figsize=(10, 15))
 
@@ -116,13 +135,18 @@ ax[2].set_title('Deflection Diagram')
 ax[2].set_ylabel('Deflection [in]')
 ax[2].set_xlabel('Distance from Left Support [in]')
 
-# Rotation Calculation Results
-rotation = np.trapz(m_virtual * mb / (E * I), x)
-ax[3].axis('off')
-ax[3].text(0.1, 0.7, f'Deflection at X = {X} inches: {deflection[int(X/dx)]:.6f} inches', fontsize=12)
-ax[3].text(0.1, 0.5, f'Rotation at X = {X} inches: {rotation:.6f} radians', fontsize=12)
+# Rotation Diagram
+ax[3].plot(x, rotation, label='Rotation', linewidth=2)
+ax[3].grid(True)
+ax[3].set_title('Rotation Diagram')
+ax[3].set_ylabel('Rotation [radians]')
+ax[3].set_xlabel('Distance from Left Support [in]')
 
 plt.tight_layout()
 
 # Display the plot in Streamlit
 st.pyplot(fig)
+
+# Display Deflection and Rotation at X
+st.write(f"Deflection at X = {X} inches: {deflection_at_X:.6f} inches")
+st.write(f"Rotation at X = {X} inches: {rotation_at_X:.6f} radians")
