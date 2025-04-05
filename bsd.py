@@ -36,29 +36,60 @@ def calculate_bending_moment(x, Ra, P1, a, P2, b, P3, c, L):
             mb[j] = Ra * x[j] - P1 * (x[j] - a) - P2 * (x[j] - b) - P3 * (x[j] - c)
     return mb
 
-# Function to compute Virtual Bending Moment (for deflection and rotation)
+# Function to compute Virtual Bending Moment for Deflection and Rotation
 def calculate_virtual_bending_moment(x, X, L):
-    m_virtual = np.zeros_like(x)
+    bm = np.zeros_like(x)
     for j in range(len(x)):
         if x[j] < X:
-            m_virtual[j] = x[j] * (L - X) / L
+            bm[j] = x[j] * (L - X) / L
         else:
-            m_virtual[j] = (L - x[j]) * X / L
-    return m_virtual
+            bm[j] = X - (X / L) * x[j]
+    return bm
 
-# Function to compute deflection along the beam
-def calculate_deflection(x, E, I, mb, m_virtual):
-    deflection = np.zeros_like(x)
-    for i in range(1, len(x)):
-        deflection[i] = np.trapz(mb[:i+1] * m_virtual[:i+1] / (E * I), x[:i+1])
-    return deflection
+# Function to compute virtual work for each load P1, P2, P3
+def calculate_virtual_work(x, a, b, c, P1, P2, P3, L):
+    m1 = np.zeros_like(x)
+    m2 = np.zeros_like(x)
+    m3 = np.zeros_like(x)
+    
+    # Virtual Work due to P1
+    for j in range(len(x)):
+        if x[j] < a:
+            m1[j] = x[j] * ((P1 - (P1 * a)) / L)
+        else:
+            m1[j] = a - x[j] * (P1 * a) / L
+    
+    # Virtual Work due to P2
+    for j in range(len(x)):
+        if x[j] < b:
+            m2[j] = x[j] * ((P2 - (P2 * b)) / L)
+        else:
+            m2[j] = b - x[j] * (P2 * b) / L
 
-# Function to compute rotation along the beam
-def calculate_rotation(x, E, I, mb, m_virtual):
-    rotation = np.zeros_like(x)
+    # Virtual Work due to P3
+    for j in range(len(x)):
+        if x[j] < c:
+            m3[j] = x[j] * ((P3 - (P3 * c)) / L)
+        else:
+            m3[j] = c - x[j] * (P3 * c) / L
+            
+    return m1, m2, m3
+
+# Function to compute Deflection along the Beam
+def calculate_deflection(x, E, I, bm, m1, m2, m3):
+    delta = np.zeros_like(x)
+    # Deflection Computation using Virtual Work (EI is constant)
     for i in range(1, len(x)):
-        rotation[i] = np.trapz(mb[:i+1] * m_virtual[:i+1] / (E * I), x[:i+1])
-    return rotation
+        delta[i] = np.trapz(bm[:i+1] * m1[:i+1] / (E * I), x[:i+1]) + np.trapz(bm[:i+1] * m2[:i+1] / (E * I), x[:i+1]) + np.trapz(bm[:i+1] * m3[:i+1] / (E * I), x[:i+1])
+    return delta
+
+# Function to compute Rotation along the Beam
+def calculate_rotation(x, E, I, bm, m1, m2, m3):
+    theta = np.zeros_like(x)
+    # Rotation Computation using Virtual Work (EI is constant)
+    for i in range(1, len(x)):
+        theta[i] = np.trapz(bm[:i+1] * m1[:i+1] / (E * I), x[:i+1]) + np.trapz(bm[:i+1] * m2[:i+1] / (E * I), x[:i+1]) + np.trapz(bm[:i+1] * m3[:i+1] / (E * I), x[:i+1])
+    return theta
 
 # Streamlit Interface
 st.title('Shear, Bending Moment, Deflection for a Simply Supported Beam')
@@ -89,13 +120,14 @@ vb = calculate_shear_force(x, Ra, P1, a, P2, b, P3, c, L)
 mb = calculate_bending_moment(x, Ra, P1, a, P2, b, P3, c, L)
 
 # Calculate Virtual Bending Moment for Deflection and Rotation
-m_virtual = calculate_virtual_bending_moment(x, X, L)
+bm = calculate_virtual_bending_moment(x, X, L)
 
-# Compute Deflection along the Beam
-deflection = calculate_deflection(x, E, I, mb, m_virtual)
+# Compute virtual work for loads P1, P2, and P3
+m1, m2, m3 = calculate_virtual_work(x, a, b, c, P1, P2, P3, L)
 
-# Compute Rotation along the Beam
-rotation = calculate_rotation(x, E, I, mb, m_virtual)
+# Compute Deflection and Rotation along the Beam
+deflection = calculate_deflection(x, E, I, bm, m1, m2, m3)
+rotation = calculate_rotation(x, E, I, bm, m1, m2, m3)
 
 # Deflection and Rotation at X
 deflection_at_X = deflection[int(X / dx)]
