@@ -36,8 +36,18 @@ def calculate_bending_moment(x, Ra, P1, a, P2, b, P3, c, L):
             mb[j] = Ra * x[j] - P1 * (x[j] - a) - P2 * (x[j] - b) - P3 * (x[j] - c)
     return mb
 
+# Function to compute Virtual Bending Moment (for deflection and rotation)
+def calculate_virtual_bending_moment(x, X, L):
+    m_virtual = np.zeros_like(x)
+    for j in range(len(x)):
+        if x[j] < X:
+            m_virtual[j] = x[j] * (L - X) / L
+        else:
+            m_virtual[j] = (L - x[j]) * X / L
+    return m_virtual
+
 # Streamlit Interface
-st.title('Shear and Bending Moment Diagram for a Simply Supported Beam')
+st.title('Shear, Bending Moment, Deflection, and Rotation for a Simply Supported Beam')
 
 # User Inputs
 P1 = st.number_input('P1 (lbs)', value=100.0)
@@ -64,26 +74,38 @@ x = np.arange(0, L + dx, dx)
 vb = calculate_shear_force(x, Ra, P1, a, P2, b, P3, c, L)
 mb = calculate_bending_moment(x, Ra, P1, a, P2, b, P3, c, L)
 
-# Plotting Moment Diagram
-plt.figure(figsize=(10, 6))
+# Calculate Virtual Bending Moment for Deflection and Rotation
+m_virtual = calculate_virtual_bending_moment(x, X, L)
+
+# Deflection Calculation (Virtual Work Principle)
+deflection = np.trapz(mb * m_virtual / (E * I), x)
+
+# Rotation Calculation (Virtual Work Principle)
+rotation = np.trapz(m_virtual * mb / (E * I), x)
+
+# Plotting Moment Diagram and Shear Force Diagram
+fig, ax = plt.subplots(3, 1, figsize=(10, 12))
 
 # Moment Diagram
-plt.subplot(2, 1, 1)
-plt.plot(x, mb, label='Moment', linewidth=2)
-plt.grid(True)
-plt.title('Bending Moment Diagram')
-plt.ylabel('Moment [lb·in]')
-plt.xlabel('Distance from Left Support [in]')
+ax[0].plot(x, mb, label='Moment', linewidth=2)
+ax[0].grid(True)
+ax[0].set_title('Bending Moment Diagram')
+ax[0].set_ylabel('Moment [lb·in]')
+ax[0].set_xlabel('Distance from Left Support [in]')
 
 # Shear Diagram
-plt.subplot(2, 1, 2)
-plt.plot(x, vb, 'r', label='Shear', linewidth=2)
-plt.grid(True)
-plt.title('Shear Force Diagram')
-plt.ylabel('Shear [lb]')
-plt.xlabel('Distance from Left Support [in]')
+ax[1].plot(x, vb, 'r', label='Shear', linewidth=2)
+ax[1].grid(True)
+ax[1].set_title('Shear Force Diagram')
+ax[1].set_ylabel('Shear [lb]')
+ax[1].set_xlabel('Distance from Left Support [in]')
+
+# Deflection and Rotation Results
+ax[2].axis('off')
+ax[2].text(0.1, 0.7, f'Deflection at X = {X} inches: {deflection:.6f} inches', fontsize=12)
+ax[2].text(0.1, 0.5, f'Rotation at X = {X} inches: {rotation:.6f} radians', fontsize=12)
 
 plt.tight_layout()
 
 # Display the plot in Streamlit
-st.pyplot(plt)
+st.pyplot(fig)
