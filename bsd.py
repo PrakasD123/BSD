@@ -46,6 +46,14 @@ def calculate_virtual_bending_moment(x, X, L):
             m_virtual[j] = (L - x[j]) * X / L
     return m_virtual
 
+# Function to compute deflection along the beam
+def calculate_deflection(x, E, I, mb, m_virtual):
+    # Use Virtual Work principle to compute deflection
+    deflection = np.zeros_like(x)
+    for i in range(len(x)):
+        deflection[i] = np.trapz(mb * m_virtual / (E * I), x[:i+1])
+    return deflection
+
 # Streamlit Interface
 st.title('Shear, Bending Moment, Deflection, and Rotation for a Simply Supported Beam')
 
@@ -77,14 +85,11 @@ mb = calculate_bending_moment(x, Ra, P1, a, P2, b, P3, c, L)
 # Calculate Virtual Bending Moment for Deflection and Rotation
 m_virtual = calculate_virtual_bending_moment(x, X, L)
 
-# Deflection Calculation (Virtual Work Principle)
-deflection = np.trapz(mb * m_virtual / (E * I), x)
+# Compute Deflection along the Beam
+deflection = calculate_deflection(x, E, I, mb, m_virtual)
 
-# Rotation Calculation (Virtual Work Principle)
-rotation = np.trapz(m_virtual * mb / (E * I), x)
-
-# Plotting Moment Diagram and Shear Force Diagram
-fig, ax = plt.subplots(3, 1, figsize=(10, 12))
+# Plotting Moment Diagram, Shear Force Diagram, and Deflection Diagram
+fig, ax = plt.subplots(4, 1, figsize=(10, 15))
 
 # Moment Diagram
 ax[0].plot(x, mb, label='Moment', linewidth=2)
@@ -100,10 +105,18 @@ ax[1].set_title('Shear Force Diagram')
 ax[1].set_ylabel('Shear [lb]')
 ax[1].set_xlabel('Distance from Left Support [in]')
 
-# Deflection and Rotation Results
-ax[2].axis('off')
-ax[2].text(0.1, 0.7, f'Deflection at X = {X} inches: {deflection:.6f} inches', fontsize=12)
-ax[2].text(0.1, 0.5, f'Rotation at X = {X} inches: {rotation:.6f} radians', fontsize=12)
+# Deflection Diagram
+ax[2].plot(x, deflection, label='Deflection', linewidth=2)
+ax[2].grid(True)
+ax[2].set_title('Deflection Diagram')
+ax[2].set_ylabel('Deflection [in]')
+ax[2].set_xlabel('Distance from Left Support [in]')
+
+# Rotation Calculation Results
+rotation = np.trapz(m_virtual * mb / (E * I), x)
+ax[3].axis('off')
+ax[3].text(0.1, 0.7, f'Deflection at X = {X} inches: {deflection[int(X/dx)]:.6f} inches', fontsize=12)
+ax[3].text(0.1, 0.5, f'Rotation at X = {X} inches: {rotation:.6f} radians', fontsize=12)
 
 plt.tight_layout()
 
