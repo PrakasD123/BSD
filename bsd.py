@@ -86,5 +86,4 @@ plt.xlabel('Distance from Left Support [in]')\
 plt.tight_layout()\
 \
 # Display the plot in Streamlit\
-st.pyplot(plt)\
-}
+st.pyplot(plt)
