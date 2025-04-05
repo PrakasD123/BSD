@@ -48,30 +48,20 @@ def calculate_virtual_bending_moment(x, X, L):
 
 # Function to compute deflection along the beam
 def calculate_deflection(x, E, I, mb, m_virtual):
-    # Initialize deflection array
     deflection = np.zeros_like(x)
-    
-    # Perform the integration for each point
     for i in range(1, len(x)):
-        # Integrating from the start to the current position x[i]
         deflection[i] = np.trapz(mb[:i+1] * m_virtual[:i+1] / (E * I), x[:i+1])
-
     return deflection
 
 # Function to compute rotation along the beam
 def calculate_rotation(x, E, I, mb, m_virtual):
-    # Initialize rotation array
     rotation = np.zeros_like(x)
-    
-    # Perform the integration for each point
     for i in range(1, len(x)):
-        # Integrating from the start to the current position x[i]
         rotation[i] = np.trapz(mb[:i+1] * m_virtual[:i+1] / (E * I), x[:i+1])
-
     return rotation
 
 # Streamlit Interface
-st.title('Shear, Bending Moment, Deflection, and Rotation for a Simply Supported Beam')
+st.title('Shear, Bending Moment, Deflection for a Simply Supported Beam')
 
 # User Inputs
 P1 = st.number_input('P1 (lbs)', value=100.0)
@@ -111,8 +101,8 @@ rotation = calculate_rotation(x, E, I, mb, m_virtual)
 deflection_at_X = deflection[int(X / dx)]
 rotation_at_X = rotation[int(X / dx)]
 
-# Plotting Moment Diagram, Shear Force Diagram, and Deflection Diagram
-fig, ax = plt.subplots(4, 1, figsize=(10, 15))
+# Plotting Moment Diagram and Shear Force Diagram
+fig, ax = plt.subplots(2, 1, figsize=(10, 10))
 
 # Moment Diagram
 ax[0].plot(x, mb, label='Moment', linewidth=2)
@@ -127,20 +117,6 @@ ax[1].grid(True)
 ax[1].set_title('Shear Force Diagram')
 ax[1].set_ylabel('Shear [lb]')
 ax[1].set_xlabel('Distance from Left Support [in]')
-
-# Deflection Diagram
-ax[2].plot(x, deflection, label='Deflection', linewidth=2)
-ax[2].grid(True)
-ax[2].set_title('Deflection Diagram')
-ax[2].set_ylabel('Deflection [in]')
-ax[2].set_xlabel('Distance from Left Support [in]')
-
-# Rotation Diagram
-ax[3].plot(x, rotation, label='Rotation', linewidth=2)
-ax[3].grid(True)
-ax[3].set_title('Rotation Diagram')
-ax[3].set_ylabel('Rotation [radians]')
-ax[3].set_xlabel('Distance from Left Support [in]')
 
 plt.tight_layout()
 
