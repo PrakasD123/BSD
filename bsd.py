@@ -1,7 +1,6 @@
 import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.patches as patches
 
 # Function to compute Reaction Forces
 def compute_reactions(P1, P2, P3, a, b, c, L):
@@ -65,46 +64,26 @@ x = np.arange(0, L + dx, dx)
 vb = calculate_shear_force(x, Ra, P1, a, P2, b, P3, c, L)
 mb = calculate_bending_moment(x, Ra, P1, a, P2, b, P3, c, L)
 
-# Plotting Moment Diagram and Shear Force Diagram
-fig, ax = plt.subplots(3, 1, figsize=(10, 12))
+# Plotting Moment Diagram
+plt.figure(figsize=(10, 6))
 
 # Moment Diagram
-ax[0].plot(x, mb, label='Moment', linewidth=2)
-ax[0].grid(True)
-ax[0].set_title('Bending Moment Diagram')
-ax[0].set_ylabel('Moment [lb·in]')
-ax[0].set_xlabel('Distance from Left Support [in]')
+plt.subplot(2, 1, 1)
+plt.plot(x, mb, label='Moment', linewidth=2)
+plt.grid(True)
+plt.title('Bending Moment Diagram')
+plt.ylabel('Moment [lb·in]')
+plt.xlabel('Distance from Left Support [in]')
 
 # Shear Diagram
-ax[1].plot(x, vb, 'r', label='Shear', linewidth=2)
-ax[1].grid(True)
-ax[1].set_title('Shear Force Diagram')
-ax[1].set_ylabel('Shear [lb]')
-ax[1].set_xlabel('Distance from Left Support [in]')
-
-# Beam with Loads and Supports Diagram
-beam_ax = ax[2]
-beam_ax.plot([0, L], [0, 0], color='black', linewidth=6)  # Beam
-
-# Add supports
-beam_ax.plot(0, 0, 'ko', label="Left Support", markersize=8)
-beam_ax.plot(L, 0, 'ko', label="Right Support", markersize=8)
-
-# Add loads at positions a, b, and c
-beam_ax.arrow(a, 0, 0, -P1/100, head_width=0.2, head_length=0.5, fc='blue', ec='blue', label=f'Load P1 ({P1} lbs)')
-beam_ax.arrow(b, 0, 0, -P2/100, head_width=0.2, head_length=0.5, fc='green', ec='green', label=f'Load P2 ({P2} lbs)')
-beam_ax.arrow(c, 0, 0, -P3/100, head_width=0.2, head_length=0.5, fc='red', ec='red', label=f'Load P3 ({P3} lbs)')
-
-# Set beam diagram properties
-beam_ax.set_ylim(-max(P1, P2, P3)/10, max(P1, P2, P3)/10)
-beam_ax.set_xlim(0, L)
-beam_ax.set_title('Beam with Applied Loads')
-beam_ax.set_xlabel('Distance [in]')
-beam_ax.set_ylabel('Applied Load [lbs]')
-
-beam_ax.legend()
+plt.subplot(2, 1, 2)
+plt.plot(x, vb, 'r', label='Shear', linewidth=2)
+plt.grid(True)
+plt.title('Shear Force Diagram')
+plt.ylabel('Shear [lb]')
+plt.xlabel('Distance from Left Support [in]')
 
 plt.tight_layout()
 
 # Display the plot in Streamlit
-st.pyplot(fig)
+st.pyplot(plt)
