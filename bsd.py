@@ -48,10 +48,14 @@ def calculate_virtual_bending_moment(x, X, L):
 
 # Function to compute deflection along the beam
 def calculate_deflection(x, E, I, mb, m_virtual):
-    # Use Virtual Work principle to compute deflection
+    # Initialize deflection array
     deflection = np.zeros_like(x)
-    for i in range(len(x)):
-        deflection[i] = np.trapz(mb * m_virtual / (E * I), x[:i+1])
+    
+    # Perform the integration for each point
+    for i in range(1, len(x)):
+        # Integrating from the start to the current position x[i]
+        deflection[i] = np.trapz(mb[:i+1] * m_virtual[:i+1] / (E * I), x[:i+1])
+
     return deflection
 
 # Streamlit Interface
