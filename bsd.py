@@ -24,11 +24,11 @@ I = st.number_input("Enter moment of inertia I (in^4):", value=100.0)
 
 if st.button("Run Analysis"):
 
-    # Reaction Forces
+    # Reaction Forces Calculation
     Rb = (P1 * a + P2 * b + P3 * c) / L
     Ra = (P1 + P2 + P3) - Rb
 
-    # Shear Force and Bending Moment
+    # Shear Force and Bending Moment Diagrams
     dx = L / 10000.0
     x = np.arange(0, L + dx, dx)
     M = np.zeros_like(x)
@@ -48,25 +48,29 @@ if st.button("Run Analysis"):
             M[i] = Ra * xi - P1 * (xi - a) - P2 * (xi - b) - P3 * (xi - c)
             V[i] = Ra - P1 - P2 - P3
 
-    # Plot Diagrams
-    st.subheader("Shear Force and Bending Moment Diagrams")
-    fig, ax = plt.subplots(2, 1, figsize=(10, 8))
+    # Plotting the diagrams (unchanged)
+    plt.figure(figsize=(10, 8))
 
-    ax[0].plot(x, M, linewidth=2)
-    ax[0].grid(True)
-    ax[0].set_title("Bending Moment Diagram")
-    ax[0].set_xlabel("Distance from Left Support [in]")
-    ax[0].set_ylabel("Bending Moment [lb-in]")
+    # Bending Moment Diagram
+    plt.subplot(2, 1, 1)
+    plt.plot(x, M, linewidth=3)
+    plt.grid(True)
+    plt.title("Bending Moment Diagram")
+    plt.xlabel("Distance from Left Support [in]")
+    plt.ylabel("Bending Moment [lb-in]")
 
-    ax[1].plot(x, V, 'r', linewidth=2)
-    ax[1].grid(True)
-    ax[1].set_title("Shear Force Diagram")
-    ax[1].set_xlabel("Distance from Left Support [in]")
-    ax[1].set_ylabel("Shear Force [lb]")
+    # Shear Force Diagram
+    plt.subplot(2, 1, 2)
+    plt.plot(x, V, 'r', linewidth=3)
+    plt.grid(True)
+    plt.title("Shear Force Diagram")
+    plt.xlabel("Distance from Left Support [in]")
+    plt.ylabel("Shear Force [lb]")
 
-    st.pyplot(fig)
+    plt.tight_layout()
+    st.pyplot(plt)  # Display the figure in Streamlit
 
-    # Virtual Work for Deflection and Rotation
+    # Deflection and Rotation Using Virtual Work
     m_t = np.zeros_like(x)
     m_t_deriv = np.zeros_like(x)
     for i, xi in enumerate(x):
@@ -81,6 +85,6 @@ if st.button("Run Analysis"):
     theta = np.trapz(M * m_t_deriv, x) / (E * I)
 
     # Display Results
-    st.subheader(f"Results at x = {X:.2f} in")
-    st.write(f"**Deflection, Δ = {delta:.6e} in**")
-    st.write(f"**Rotation, θ  = {theta:.6e} rad**")
+    st.subheader("--- Results at x = {:.2f} in ---".format(X))
+    st.write("**Deflection, Δ = {:.6e} in**".format(delta))
+    st.write("**Rotation, θ  = {:.6e} rad**".format(theta))
