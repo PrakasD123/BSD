@@ -1,89 +1,105 @@
-import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
+import streamlit as st
 
-# Streamlit interface
-st.title("Beam Analysis Calculator")
-st.write("Enter the parameters for beam analysis below:")
+st.title("Beam Deflection and Rotation using Virtual Work")
 
-# Input fields in Streamlit
-P1 = st.number_input("Load at point a (lbs)", value=5.0)
-P2 = st.number_input("Load at point b (lbs)", value=10.0)
-P3 = st.number_input("Load at point c (lbs)", value=15.0)
-a = st.number_input("Position of P1 (inches)", value=5.0)
-b = st.number_input("Position of P2 (inches)", value=10.0)
-c = st.number_input("Position of P3 (inches)", value=15.0)
-L = st.number_input("Length of beam (inches)", value=20.0)
-X = st.number_input("Point for rotation calculation (inches)", value=17.0)
-E = st.number_input("Modulus of elasticity (psi)", value=29000000.0)
-I = st.number_input("Moment of inertia (in^4)", value=0.55)
+#
+# User Inputs
+#
+st.sidebar.header("User Inputs")
 
-if st.button("Calculate and Plot"):
-    # Original code starts here - unchanged
-    # Calculate Reaction Forces
-    Rb = (P1 * a + P2 * b + P3 * c) / L
-    Ra = P1 + P2 + P3 - Rb
+# Loads in pounds
+P1 = st.sidebar.number_input("Enter load P1 (lb):", value=100.0)
+P2 = st.sidebar.number_input("Enter load P2 (lb):", value=150.0)
+P3 = st.sidebar.number_input("Enter load P3 (lb):", value=200.0)
 
-    # Discretize Beam (Fine enough for integration)
-    dx = L / 1000
-    x = np.arange(0, L + dx, dx)
+# Distances (in inches)
+a = st.sidebar.number_input("Enter distance a (in) for load P1:", value=10.0)
+b = st.sidebar.number_input("Enter distance b (in) for load P2:", value=20.0)
+c = st.sidebar.number_input("Enter distance c (in) for load P3:", value=30.0)
 
-    # Calculate Shear Force and Bending Moment
-    def calculate_shear(x, Ra, P1, a, P2, b, P3, c, L):
-        vb = np.zeros_like(x)
-        for j in range(len(x)):
-            if x[j] <= a:
-                vb[j] = Ra
-            elif x[j] <= b:
-                vb[j] = Ra - P1
-            elif x[j] <= c:
-                vb[j] = Ra - P1 - P2
-            else:
-                vb[j] = Ra - P1 - P2 - P3
-        return vb
+# Beam span in inches
+L = st.sidebar.number_input("Enter span L (in):", value=40.0)
 
-    def calculate_bending_moment(x, Ra, P1, a, P2, b, P3, c, L):
-        mb = np.zeros_like(x)
-        for j in range(len(x)):
-            if x[j] <= a:
-                mb[j] = Ra * x[j]
-            elif x[j] <= b:
-                mb[j] = Ra * x[j] - P1 * (x[j] - a)
-            elif x[j] <= c:
-                mb[j] = Ra * x[j] - P1 * (x[j] - a) - P2 * (x[j] - b)
-            else:
-                mb[j] = Ra * x[j] - P1 * (x[j] - a) - P2 * (x[j] - b) - P3 * (x[j] - c)
-        return mb
+# Point for deflection/rotation
+X = st.sidebar.number_input("Enter point X (in):", value=25.0)
 
-    # Shear Force and Bending Moment calculations
-    vb = calculate_shear(x, Ra, P1, a, P2, b, P3, c, L)
-    mb = calculate_bending_moment(x, Ra, P1, a, P2, b, P3, c, L)
+# Material properties
+E = st.sidebar.number_input("Enter modulus of elasticity E (psi):", value=30000000.0)
+I = st.sidebar.number_input("Enter moment of inertia I (in^4):", value=100.0)
 
-    # Plotting the Shear and Moment Diagrams
-    plt.figure(figsize=(12, 8))
+#
+# Reaction Forces Calculation
+#
+Rb = (P1 * a + P2 * b + P3 * c) / L
+Ra = (P1 + P2 + P3) - Rb
 
-    # Plot Moment Diagram
-    plt.subplot(2, 1, 1)
-    plt.plot(x, mb, label='Bending Moment', linewidth=2)
-    plt.grid(True)
-    plt.title('Bending Moment Diagram')
-    plt.ylabel('Moment [lb·in]')
-    plt.xlabel('Distance from Left Support [in]')
+#
+# Shear Force and Bending Moment Diagrams
+#
+dx = L / 10000.0
+x = np.arange(0, L + dx, dx)
+M = np.zeros_like(x)
+V = np.zeros_like(x)
 
-    # Plot Shear Diagram
-    plt.subplot(2, 1, 2)
-    plt.plot(x, vb, 'r', label='Shear Force', linewidth=2)
-    plt.grid(True)
-    plt.title('Shear Force Diagram')
-    plt.ylabel('Shear [lb]')
-    plt.xlabel('Distance from Left Support [in]')
+for i, xi in enumerate(x):
+    if xi <= a:
+        M[i] = Ra * xi
+        V[i] = Ra
+    elif xi <= b:
+        M[i] = Ra * xi - P1 * (xi - a)
+        V[i] = Ra - P1
+    elif xi <= c:
+        M[i] = Ra * xi - P1 * (xi - a) - P2 * (xi - b)
+        V[i] = Ra - P1 - P2
+    else:
+        M[i] = Ra * xi - P1 * (xi - a) - P2 * (xi - b) - P3 * (xi - c)
+        V[i] = Ra - P1 - P2 - P3
 
-    plt.tight_layout()
-    # Original code ends here
+# Original plotting section preserved
+plt.figure(figsize=(10, 8))
 
-    # Display the plot in Streamlit
-    st.pyplot(plt)
+# Bending Moment Diagram
+plt.subplot(2, 1, 1)
+plt.plot(x, M, linewidth=3)
+plt.grid(True)
+plt.title("Bending Moment Diagram")
+plt.xlabel("Distance from Left Support [in]")
+plt.ylabel("Bending Moment [lb-in]")
 
-    # Display reaction forces
-    st.write(f"Reaction force at A (Ra): {Ra:.2f} lbs")
-    st.write(f"Reaction force at B (Rb): {Rb:.2f} lbs")
+# Shear Force Diagram
+plt.subplot(2, 1, 2)
+plt.plot(x, V, 'r', linewidth=3)
+plt.grid(True)
+plt.title("Shear Force Diagram")
+plt.xlabel("Distance from Left Support [in]")
+plt.ylabel("Shear Force [lb]")
+
+plt.tight_layout()
+
+# Displaying plot using Streamlit
+st.pyplot(plt)
+
+#
+# Deflection and Rotation Using Virtual Work
+#
+m_t = np.zeros_like(x)
+m_t_deriv = np.zeros_like(x)
+for i, xi in enumerate(x):
+    if xi <= X:
+        m_t[i] = xi * (L - X) / L
+        m_t_deriv[i] = (L - X) / L
+    else:
+        m_t[i] = X * (L - xi) / L
+        m_t_deriv[i] = -X / L
+
+delta = np.trapz(M * m_t, x) / (E * I)
+theta = np.trapz(M * m_t_deriv, x) / (E * I)
+
+#
+# Display Results
+#
+st.subheader("--- Results at x = {:.2f} in ---".format(X))
+st.write("**Deflection, Δ = {:.6e} in**".format(delta))
+st.write("**Rotation, θ  = {:.6e} rad**".format(theta))
